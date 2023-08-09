@@ -1,0 +1,172 @@
+﻿@page "/cart"
+@using Blazored.LocalStorage;
+@using OutFit.CoreBusiness;
+@using OutFit.UseCases.Carts.Interfaces;
+
+@inject NavigationManager navMan;
+@inject WebsiteAuthenticator WebsiteAuthenticator
+
+@inject ILocalStorageService localStore
+
+@inject IViewCartUseCase _viewCart;
+
+<div class="breadcrumb-option">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb__links">
+                    <a href="index-2.html"><i class="fa fa-home"></i> Home</a>
+                    <span>Shopping cart</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<section class="shop-cart spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="shop__cart__table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach(var itm in cart)
+                            {
+                                <tr>
+                                <td class="cart__product__item">
+                                    <img style="width:15%; height:15%" src="@itm.Product.ProductImageUrl" alt="">
+                                    <div class="cart__product__item__title">
+                                        <h6>@itm.Product.Name</h6>
+                                        <div class="rating">
+                                            <i class="fa fa-star"></i>
+                                            <i class="fa fa-star"></i>
+                                            <i class="fa fa-star"></i>
+                                            <i class="fa fa-star"></i>
+                                            <i class="fa fa-star"></i>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="cart__price">$ @(itm.ProductPrice / itm.Quantity)</td>
+                                <td class="cart__quantity">
+                                    <div class="pro-qty">
+                                        <input type="number" @bind="@itm.Quantity"></input>
+                                    </div>
+                                </td>
+                                <td class="cart__total">@(itm.ProductPrice) </td>
+                                    <td class="cart__close"><span @onclick="()=>RemoveCartItem(itm.ProductId)" class="icon_close"><a href=""></a></span></td>
+                            </tr>
+                            }
+
+                           
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6 col-md-6 col-sm-6">
+                <div class="cart__btn">
+                    <a href="#">Continue Shopping</a>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-6">
+                <div class="cart__btn update__btn">
+                    <a href="#"><span class="icon_loading"></span> Update cart</a>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="discount__content">
+                    <h6>Discount codes</h6>
+                    <form action="#">
+                        <input type="text" placeholder="Enter your coupon code">
+                            <button type="submit" class="site-btn">Apply</button>
+                        </form>
+                </div>
+            </div>
+            <div class="col-lg-4 offset-lg-2">
+                <div class="cart__total__procced">
+                    <h6>Cart total</h6>
+                    <ul>
+                        <li>Subtotal <span>$ @total</span></li>
+                        <li>Total <span>$ @total</span></li>
+                    </ul>
+                    <a href="" @onclick="CheckOut" class="primary-btn">Proceed to checkout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    private List<Cart> cart = new List<Cart>();
+    private int? quant { get; set; } = 1;
+    private decimal total = 0.00M;
+
+    protected override  async Task OnAfterRenderAsync(bool firstRender)
+    {
+        List<Cart> memCart =  await localStore.GetItemAsync<List<Cart>>("cart");
+        if(memCart != null)
+        {
+            cart.Clear();
+            cart.AddRange(memCart);
+            foreach(var c in cart)
+            {
+                c.ProductPrice = (c.ProductPrice * c.Quantity);
+
+            }
+            total = cart.Sum(c => c.ProductPrice);
+            StateHasChanged();
+        }
+
+    }
+
+    public async void CheckOut()
+    {
+        var x = await WebsiteAuthenticator.GetAuthenticationStateAsync();
+        if (x.User.Identity is null)
+        {
+            navMan.NavigateTo("/account/cart");
+        }
+        else
+        {
+            navMan.NavigateTo("/checkout");
+        }
+    }
+
+    public async void RemoveCartItem(int prodId)
+    {
+        List<Cart> memCart = await localStore.GetItemAsync<List<Cart>>("cart");
+        foreach(var cartItem in memCart)
+        {
+            if(cartItem.ProductId == prodId)
+            {
+                if (cartItem.Quantity == 1)
+                {
+                    memCart.Remove(cartItem);
+                }
+                else
+                {
+                    cartItem.Quantity = cartItem.Quantity - 1;
+                }
+                await localStore.ClearAsync();
+                await localStore.SetItemAsync("cart", memCart);
+                break;
+            }
+        }
+        StateHasChanged();
+        return;
+    }
+
+}

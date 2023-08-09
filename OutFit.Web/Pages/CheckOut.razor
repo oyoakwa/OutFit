@@ -1,0 +1,168 @@
+﻿@page "/checkout"
+
+@using OutFit.CoreBusiness;
+@using Blazored.LocalStorage;
+@using OutFit.UseCases.Orders.Interfaces;
+@using OutFit.UseCases.ProductOrder.Interfaces;
+
+@inject IAddProductOrderUseCase _productOrder;
+@inject IMakeOrderUseCase _makeOrder;
+
+@inject ILocalStorageService localStore
+@inject WebsiteAuthenticator WebsiteAuthenticator
+
+<section class="checkout spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <h6 class="coupon__link">
+                    <span class="icon_tag_alt"></span> <a href="#">Have a coupon?</a> Click
+                    here to enter your code.
+                </h6>
+            </div>
+        </div>
+        <form action="#" class="checkout__form">
+            <div class="row">
+                <div class="col-lg-8">
+                    <h5>Billing detail</h5>
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6 col-sm-6">
+                            <div class="checkout__form__input">
+                                <p>Receivers Name <span>*</span></p>
+                                <input @bind="order.ReceiversName" type="text">
+                            </div>
+                        </div>
+                        
+                        
+                        <div class="col-lg-12">
+                            
+                            <div class="checkout__form__input">
+                                <p>Receivers Address(full and Specific) <span>*</span></p>
+                                <input type="text" placeholder="Street Address" @bind="address">
+                                
+                            </div>
+                            
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6">
+                            <div class="checkout__form__input">
+                                <p>State <span>*</span></p>
+                                <input type="text" @bind="state">
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6 col-sm-6">
+                            <div class="checkout__form__input">
+                                <p>Receivers Phone Number <span>*</span></p>
+                                <input type="text" @bind="order.ReceiversPhoneNumber">
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-12">
+                            <div class="checkout__form__input">
+                                <label for="note">
+                                    Note about your order, e.g, special note for delivery
+                                </label>
+                                <p>Specific Order Information <span>*</span></p>
+                                <input type="text" @bind="order.OrderNote"  placeholder="Note about your order, e.g, special noe for delivery"/>@*use TextArea Here*@
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="checkout__order">
+                        <h5>Your order</h5>
+                        <div class="checkout__order__product">
+                            <ul>
+                                <li>
+                                    <span class="top__text">Product</span>
+                                    <span class="top__text__right">Total</span>
+                                </li>
+                                @foreach(var item in cart)
+                                {
+                                    <li> @item.Product.Name <span>$ @item.ProductPrice</span></li>
+                                }
+                            </ul>
+                        </div>
+                        <div class="checkout__order__total">
+                            <ul>
+                                <li>Subtotal <span>$ @total</span></li>
+                                <li>Total <span>$ @total</span></li>
+                            </ul>
+                        </div>
+                        <div class="checkout__order__widget">
+                            <label for="check-payment">
+                                Cheque payment
+                                <input type="checkbox" id="check-payment">
+                                <span class="checkmark"></span>
+                            </label>
+                            <label for="paypal">
+                                PayPal
+                                <input type="checkbox" id="paypal">
+                                <span class="checkmark"></span>
+                            </label>
+                        </div>
+                        <button type="submit" @onclick="MakeOrder" class="site-btn">Place oder</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+@code {
+
+
+    private Order order{ get; set; } = new Order();
+    private List<ProductOrder> productOrders = new List<ProductOrder>();
+    private List<Cart> cart = new List<Cart>();
+    private decimal total = 0.00M;
+    int counter = 0;
+    string? state = string.Empty;
+    string? address = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        List<Cart> memCart = await localStore.GetItemAsync<List<Cart>>("cart");
+        if (memCart != null)
+        {
+            cart.Clear();
+            cart.AddRange(memCart);
+            foreach (var c in cart)
+            {
+                c.ProductPrice = (c.ProductPrice * c.Quantity);
+
+            }
+            total = cart.Sum(c => c.ProductPrice);
+            StateHasChanged();
+        }
+
+    }
+
+    public async void MakeOrder()
+    {
+
+        List<Cart> memCart = await localStore.GetItemAsync<List<Cart>>("cart");
+        order.ShippedToLocation = state + " " + address;
+        order.OrderPrice = total;
+
+        var user = await WebsiteAuthenticator.GetAuthenticationStateAsync();
+        var uName = user.User.Identity.Name;
+
+        order.UserId = uName;
+
+        var orderObj =  _makeOrder.MakeOrderAsync(order);
+
+        foreach (var c in memCart)
+        {
+            ProductOrder po = new()
+            {
+                orderid = orderObj.Id,
+                productid = c.ProductId,
+                quantity =c.Quantity
+            };
+
+            productOrders.Add(po);
+        }
+        await _productOrder.AddProductOrderAsync(productOrders);
+        await localStore.ClearAsync();
+        return;
+    }
+}

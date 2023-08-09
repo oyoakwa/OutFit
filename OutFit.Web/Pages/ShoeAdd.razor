@@ -1,0 +1,101 @@
+﻿@page "/addproduct"
+@using OutFit.CoreBusiness;
+@using System
+@using System.IO
+@using Microsoft.AspNetCore.Hosting
+@using OutFit.UseCases.Products.Interfaces;
+
+@inject IWebHostEnvironment Environment
+@inject IAddProductUseCase _addprod
+@inject NavigationManager navMan
+
+<section class="contact spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 col-md-6">
+                <div class="contact__content">
+                    
+                    <div class="contact__form">
+                        <h5>Add Shoe </h5>
+                        <EditForm Model="pdt" OnValidSubmit="SaveProduct" >
+                            <DataAnnotationsValidator></DataAnnotationsValidator>
+                            <ValidationSummary></ValidationSummary>
+                            <label for="name">Name</label>
+                            <InputText id="name" @bind-Value="pdt.Name" type="text" placeholder="Name"></InputText>
+                            <label for="quantity">Quantity</label>
+                            <InputNumber id="quantity" @bind-Value="pdt.Quantity"> </InputNumber>
+                            <label for="size">Shoe Size</label>
+                            <InputText id="size" @bind-Value="pdt.Size" placeholder="Size"></InputText>
+
+                            <label for="brand">Brand</label>
+                            <InputText placeholder="Brand" id="brand" @bind-Value="pdt.brand"></InputText>
+
+                            <label for="color">Colour</label>
+                            <InputText placeholder="Colour" id="color" @bind-Value="pdt.Colour"></InputText>
+
+                            <label for="price">Price</label>
+                            <InputNumber id="price" @bind-Value="pdt.Price"></InputNumber>
+
+                            <label for="brand">Images</label>
+                            <InputFile OnChange="@LoadFiles" multiple></InputFile>
+
+                            <label for="description">Details</label>
+                            <InputTextArea placeholder="brand" id="brand" @bind-Value="pdt.Description"></InputTextArea>
+                            <button type="submit" class="site-btn alert-primary">Add Product</button>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6">
+                
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    private Product pdt = new Product();
+
+    private List<IBrowserFile> loadedFiles = new();
+    private long maxFileSize = 1024 * 25;
+    private int maxAllowedFiles = 3;
+    private bool isLoading;
+    private string url { get; set; } = string.Empty;
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        isLoading = true;
+        loadedFiles.Clear();
+
+        foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
+        {
+            try
+            {
+                loadedFiles.Add(file);
+                var exten = Path.GetExtension(file.Name);
+                var trustedFileNameForFileStorage = DateTime.Now.ToFileTimeUtc()+exten;
+                var folderPath = Path.Combine(Environment.WebRootPath, "img");
+                var path = Path.Combine(folderPath, trustedFileNameForFileStorage);
+                url = $"/img/{trustedFileNameForFileStorage}";
+
+                await using FileStream fs = new(path, FileMode.Create);
+                await file.OpenReadStream(maxFileSize).CopyToAsync(fs);
+            }
+            catch (Exception ex)
+            {
+                ///Logger.LogError("File: {Filename} Error: {Error}",
+                // file.Name, ex.Message);
+            }
+        }
+
+        isLoading = false;
+    }
+
+    private async Task SaveProduct()
+    {
+        pdt.ProductImageUrl = url;
+        await _addprod.AddProductAsync(pdt);
+        navMan.NavigateTo("/");
+    }
+
+}

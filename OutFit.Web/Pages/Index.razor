@@ -1,0 +1,109 @@
+﻿@page "/"
+@using Blazored.LocalStorage;
+@using System.Linq;
+@using OutFit.CoreBusiness;
+@using OutFit.UseCases.Products.Interfaces;
+@using OutFit.UseCases.Carts.Interfaces;
+
+@inject ILocalStorageService localStore
+@inject IAddToCartUseCase addToCart;
+@inject IViewProductsUseCase  viewProductUseCase;
+@inject NavigationManager navMan;
+<PageTitle>Index</PageTitle>
+
+@foreach(var prod in _products)
+{
+    var p = "";
+    if(prod.ProductImageUrl != string.Empty)
+    {
+        p = prod.ProductImageUrl;
+    }
+    else
+    {
+        p = "img/NikeAir.jpeg";
+    }
+    <div class="col-lg-3 col-md-4 col-sm-6 mix women">
+        <div class="product__item">
+            <div class="product__item__pic set-bg">
+                <img data-hash="product-1" class="product__big__img" src="@p" alt="">
+                <div class="label new">@prod.brand</div>
+                <ul class="product__hover">
+                    <li><a href="@p" class="image-popup"><span class="arrow_expand"></span></a></li>
+                    <li><a @onclick="()=>ViewDetails(prod.Id)" ><span class="icon_tag_alt"></span></a></li>
+                    <li><a @onclick="()=>AddToCart(prod)" ><span class="icon_bag_alt"></span></a></li>
+                </ul>
+            </div>
+            <div class="product__item__text">
+                <h6><a href="#">@prod.Name</a></h6>
+                <div class="rating">
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                    <i class="fa fa-star"></i>
+                </div>
+                <div class="product__price">$ @prod.Price</div>
+            </div>
+        </div>
+    </div>
+}
+
+@code{
+
+    private List<Product> _products = new List<Product>();
+   // List<Cart> cart = new List<Cart>();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        _products = (await viewProductUseCase.ViewAllAsync()).ToList() ;
+    }
+
+    public async Task AddToCart(Product p)
+    {
+        //await localStore.ClearAsync();
+        //return;
+        var memCart = await localStore.GetItemAsync<List<Cart>>("cart");
+        if(memCart != null)
+        {
+            //var prodCheck = memCart.FirstOrDefault(x => x.ProductId == p.Id);
+            foreach(var x in memCart)
+            {
+                if(x.ProductId == p.Id)
+                {
+                    x.Quantity += 1;
+                    await localStore.ClearAsync();
+                    await localStore.SetItemAsync("cart", memCart);
+                    return; 
+                }
+            }
+            var cObj = new Cart(){
+                    ProductId = p.Id,
+                    ProductPrice = p.Price,
+                    Quantity = 1,
+                    Product = p
+                };
+            memCart.Add(cObj);
+            await localStore.ClearAsync();
+            await localStore.SetItemAsync("cart", memCart);
+            return;
+        }
+        memCart = new List<Cart>();
+        var cartObj = new Cart()
+            {
+                ProductId = p.Id,
+                ProductPrice = p.Price,
+                Quantity = 1,
+                Product = p
+            };
+        memCart.Add(cartObj);
+        await localStore.ClearAsync();
+        await localStore.SetItemAsync("cart", memCart);
+    }
+
+    public void ViewDetails(int id)
+    {
+        navMan.NavigateTo($"/productdetails/{id}");
+    }
+
+}

@@ -1,0 +1,232 @@
+﻿@page "/productdetails/{id:int}"
+
+@using Blazored.LocalStorage;
+@using OutFit.CoreBusiness;
+@using OutFit.UseCases.Products.Interfaces;
+@using OutFit.UseCases.Carts.Interfaces;
+@inject IAddToCartUseCase addToCart;
+@inject IViewProductByIdUseCase viewProductUseCase;
+
+@inject ILocalStorageService localStore
+
+<div class="breadcrumb-option">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="breadcrumb__links">
+                    <a href="index-2.html"><i class="fa fa-home"></i> Home</a>
+                    <a href="#">Women’s </a>
+                    <span>Essential structured blazer</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<section class="product-details spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="product__details__pic">
+                    
+                    <div class="product__details__slider__content">
+                        <div class="product__details__pic">
+                            <img data-hash="product-1" class="product__big__img" src="@prod.ProductImageUrl" alt="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="product__details__text">
+                    <h3>@prod.Name <span>Brand: @prod.brand</span></h3>
+                    <div class="rating">
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <span>( 138 reviews )</span>
+                    </div>
+                    <div class="product__details__price">$ @prod.Price<span>$ @(prod.Price *2)</span></div>
+                    <p>
+                        Nemo enim ipsam voluptatem quia aspernatur aut odit aut loret fugit, sed quia consequuntur
+                        magni lores eos qui ratione voluptatem sequi nesciunt.
+                    </p>
+                    <div class="product__details__button">
+                        <div class="quantity">
+                            <span>Quantity:</span>
+                            <div class="pro-qty">
+                                <input type="text" value="1">
+                            </div>
+                        </div>
+                        <a @onclick="()=>AddToCart(prod)" class="cart-btn"><span class="icon_bag_alt"></span> Add to cart</a>
+                        <ul>
+                            <li><a href="#"><span class="icon_heart_alt"></span></a></li>
+                            <li><a href="#"><span class="icon_adjust-horiz"></span></a></li>
+                        </ul>
+                    </div>
+                    <div class="product__details__widget">
+                        <ul>
+                            <li>
+                                <span>Availability:</span>
+                                <div class="stock__checkbox">
+                                    <label for="stockin">
+                                        In Stock
+                                        <input type="checkbox" checked="checked" id="stockin">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                </div>
+                            </li>
+                            <li>
+                                <span>Available color:</span>
+                                <div class="color__checkbox">
+                                    <label for="red">
+                                        <span> @prod.Colour</span>
+                                    </label>
+                                </div>
+                            </li>
+                            <li>
+                                <span>Available size:</span>
+                                <div class="size__btn">
+                                    <label for="xs-btn" class="active">
+                                        <input type="radio" id="xs-btn">
+                                        @prod.Size
+                                    </label>
+                                    
+                                </div>
+                            </li>
+                            <li>
+                                <span>Promotions:</span>
+                                <p>Free shipping</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="product__details__tab">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-toggle="tab" href="#tabs-1" role="tab">Description</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#tabs-2" role="tab">Specification</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#tabs-3" role="tab">Reviews ( 2 )</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="tabs-1" role="tabpanel">
+                            <h6>Description</h6>
+                            <p>
+                                Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut loret fugit, sed
+                                quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt loret.
+                                Neque porro lorem quisquam est, qui dolorem ipsum quia dolor si. Nemo enim ipsam
+                                voluptatem quia voluptas sit aspernatur aut odit aut loret fugit, sed quia ipsu
+                                consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Nulla
+                                consequat massa quis enim.
+                            </p>
+                            <p>
+                                Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget
+                                dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes,
+                                nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium
+                                quis, sem.
+                            </p>
+                        </div>
+                        <div class="tab-pane" id="tabs-2" role="tabpanel">
+                            <h6>Specification</h6>
+                            <p>
+                                Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut loret fugit, sed
+                                quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt loret.
+                                Neque porro lorem quisquam est, qui dolorem ipsum quia dolor si. Nemo enim ipsam
+                                voluptatem quia voluptas sit aspernatur aut odit aut loret fugit, sed quia ipsu
+                                consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Nulla
+                                consequat massa quis enim.
+                            </p>
+                            <p>
+                                Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget
+                                dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes,
+                                nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium
+                                quis, sem.
+                            </p>
+                        </div>
+                        <div class="tab-pane" id="tabs-3" role="tabpanel">
+                            <h6>Reviews ( 2 )</h6>
+                            <p>
+                                Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut loret fugit, sed
+                                quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt loret.
+                                Neque porro lorem quisquam est, qui dolorem ipsum quia dolor si. Nemo enim ipsam
+                                voluptatem quia voluptas sit aspernatur aut odit aut loret fugit, sed quia ipsu
+                                consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Nulla
+                                consequat massa quis enim.
+                            </p>
+                            <p>
+                                Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget
+                                dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes,
+                                nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium
+                                quis, sem.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+    </div>
+</section>
+@code {
+    [Parameter] 
+    public int id{ get; set; }
+
+    public Product prod = new Product();
+
+    protected override async Task OnInitializedAsync()
+    {
+        prod = await viewProductUseCase.GetByIdAsync(id);
+    }
+
+    public async Task AddToCart(Product p)
+    {
+        //await localStore.ClearAsync();
+        //return;
+        var memCart = await localStore.GetItemAsync<List<Cart>>("cart");
+        if (memCart != null)
+        {
+            //var prodCheck = memCart.FirstOrDefault(x => x.ProductId == p.Id);
+            foreach (var x in memCart)
+            {
+                if (x.ProductId == p.Id)
+                {
+                    x.Quantity += 1;
+                    await localStore.ClearAsync();
+                    await localStore.SetItemAsync("cart", memCart);
+                    return;
+                }
+            }
+            var cObj = new Cart()
+                {
+                    ProductId = p.Id,
+                    ProductPrice = p.Price,
+                    Quantity = 1,
+                    Product = p
+                };
+            memCart.Add(cObj);
+            await localStore.ClearAsync();
+            await localStore.SetItemAsync("cart", memCart);
+            return;
+        }
+        memCart = new List<Cart>();
+        var cartObj = new Cart()
+            {
+                ProductId = p.Id,
+                ProductPrice = p.Price,
+                Quantity = 1,
+                Product = p
+            };
+        memCart.Add(cartObj);
+        await localStore.ClearAsync();
+        await localStore.SetItemAsync("cart", memCart);
+    }
+}

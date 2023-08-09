@@ -1,0 +1,87 @@
+﻿@page "/account"
+@page "/account/{url}"
+@using Microsoft.AspNetCore.Identity;
+@using OutFit.CoreBusiness;
+
+@inject NavigationManager navMan;
+@inject WebsiteAuthenticator WebsiteAuthenticator
+<section class="contact spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 col-md-6">
+                <div class="contact__content">
+
+                    <div class="contact__form">
+                        <h5>Register </h5>
+                        <EditForm Model="reg" OnValidSubmit="RegisterUser">
+                            @*<DataAnnotationsValidator></DataAnnotationsValidator>
+                            <ValidationSummary></ValidationSummary>*@
+                            <label for="email">Email</label>
+                            <InputText id="email" @bind-Value="reg.Email" placeholder="e-mail"></InputText>
+
+                            <label for="password">Password</label>
+                            <InputText type="password" id="password"  @bind-Value="reg.Password"> </InputText>
+
+                            <label for="size">Confirm Password</label>
+                            <InputText id="size" @bind-Value="reg.ConfirmPassword" ></InputText>
+
+                            <button type="submit" class="site-btn">Register</button>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6">
+                <div class="contact__content">
+
+                    <div class="contact__form">
+                        <h5>Login </h5>
+                        <EditForm Model="lin" OnValidSubmit="LoginUser">
+                            <label for="email">Email</label>
+                            <InputText id="email" @bind-Value="lin.UserName" placeholder="e-mail"></InputText>
+
+                            <label for="password">Password</label>
+                            <InputText type="password" id="password" @bind-Value="lin.Password"> </InputText>
+
+                            <button type="submit" class="site-btn">Login</button>
+                        </EditForm>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public string url { get; set; }
+    private RegisterDTO reg = new RegisterDTO();
+    private LoginDto lin = new LoginDto();
+    [Inject]
+    private SignInManager<ApplicationUser> _signInManager { get; set; }
+
+    [Inject]
+    private UserManager<ApplicationUser> _userManager { get; set; }
+
+    private async Task RegisterUser()
+    {
+        var user = new ApplicationUser
+            {
+                UserName = reg.Email,
+                Email = reg.Email
+            };
+
+        var result = await _userManager.CreateAsync(user, reg.Password);
+
+        if (result.Succeeded)
+        {
+            await _signInManager.SignInAsync(user, isPersistent: false);
+            navMan.NavigateTo($"/{url}");
+        }
+    }
+
+    private async Task LoginUser()
+    {
+        await WebsiteAuthenticator.LoginAsync(lin);
+        navMan.NavigateTo($"/{url}");
+    }
+}
